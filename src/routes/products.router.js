@@ -1,26 +1,30 @@
 const express = require('express');
 const ProductManager = require('../managers/ProductManagerMongo.js');
+const { productsModel } = require('../dao/models/products.model.js')
 const productManager = new ProductManager();
 const router = express.Router();
 
 router
     .get('/', async (req, res) => {
-        try {            
-            const limit = parseInt(req.query.limit);
-            const allProducts = await productManager.getProducts();
+        try {
+        const limit = parseInt(req.query.limit) || null; // Puedes ajustar este valor según tus necesidades
+        const page = parseInt(req.query.page) || 1;
+        const pageSize = parseInt(req.query.pageSize) || 10;        
+        const sort = req.query.sort || null;
+        console.log('Router Products')
+        console.log('limit='+limit)
+        console.log('Page='+page)
+        console.log('pageSize='+pageSize)
+        console.log('sort='+sort)
 
-            if (!isNaN(limit)) {
-                const limitedProducts = allProducts.slice(0, limit);
-                res.json(limitedProducts);
-            } else {
-                res.json(allProducts);
-            }
+        const allProducts = await productManager.getProducts(limit,page, pageSize,sort);
+        
+        res.json(allProducts);
         } catch (error) {
-            console.error(error);
-            res.status(500).send('Error interno del servidor');
+        console.error(error);
+        res.status(500).send('Error interno del servidor');
         }
     })
-
     .get('/:pid', async (req, res) => {
         const id = parseInt(req.params.pid);
         try {            

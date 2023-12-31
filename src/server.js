@@ -4,19 +4,16 @@ const { Server } = require('socket.io');
 const { engine } = require("express-handlebars");
 const productRouter = require('./routes/products.router.js');
 const cartRouter = require('./routes/carts.router.js');
-const hbsrouter = require('./routes/handlebars.router.js');
 const userRouter = require('./routes/users.router.js')
-const ProductManager = require('./managers/ProductManagerMongo.js');
-const { connect } = require('mongoose')
-//Mongo
-// Conectar a la base de datos
-const connectDb = async () => {
-  // await connect('mongodb+srv://<username>:<pasword>@coderexample.hjzrdtr.mongodb.net/c55625?retryWrites=true&w=majority')
-  await connect('mongodb+srv://arielgodoy:Ag13135401@clustermongodb.k5c43jz.mongodb.net/?retryWrites=true&w=majority')
-  console.log('Base de datos conectada')
-}
-connectDb()
+const hbsrouter = require('./routes/handlebars.router.js');
 
+const ProductManager = require('./managers/ProductManagerMongo.js');
+
+const { connectDb } = require('./config/mongo.js')
+
+//console.log('antes de conectar');
+connectDb()
+//console.log('despues de conectar');
 
 const app = express();
 const port = 8080;
@@ -28,13 +25,14 @@ app.engine("handlebars", engine());  // Usa la propiedad engine de la instancia
 app.set("view engine", "handlebars");
 app.set("views", path.resolve(__dirname + '/views'));
 
-
-// routers
+// routers End Points BE
 app.use('/api/products', productRouter);
 app.use('/api/carts', cartRouter);
-
-app.use('/',hbsrouter);
 app.use('/api/users', userRouter)
+// routers FE
+app.use('/',hbsrouter);
+
+
 
 const httpServer = app.listen(port, (err) => {
     if (err) throw err;
