@@ -2,8 +2,8 @@
 const express = require('express');
 const router = express.Router();
 router
-.get("/getall", (req, res) => {
-    console.log('Renderizando .. /getall..');    
+.get("/products", (req, res) => {
+    console.log('Renderizando .. /products..');    
     res.render("home", {
         title: "Listado de  productos por API-WINSOCK",
         programa: "home"

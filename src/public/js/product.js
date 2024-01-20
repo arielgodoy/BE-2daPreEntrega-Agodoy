@@ -1,59 +1,44 @@
-console.log('Bienvenidos al ingreso por Websocket');
+// products.js
+
 const socket = io();
 const limit = '';
 const dataTable = $('#productTable').DataTable();
 
 console.log("Título de la página:", programa);
-//funcion que actualiza la data en pantalla
+
+// Obtener productos desde la API REST
+const obtenerProductosDesdeAPI = async () => {
+  const response = await fetch('http://localhost:8080/api/products/');
+  const data = await response.json();
+  console.log(data.payload);
+  return data.payload;
+};
+
+// Función para obtener productos usando WebSockets
 const obtenerProductos = async () => {
-  // "Pedimos la data al server por WS"
-  socket.emit('getproducts', limit);
+  const productosDesdeAPI = await obtenerProductosDesdeAPI();
 
-  // Esperamos la data de manera asíncrona
-  const dataFromServer = await new Promise(resolve => {
-    socket.on('resultado.getproducts', data => resolve(data));
-  });
-
-  // Limpiamos la tabla
-  dataTable.clear().draw();
-
-  // Inyectamos la data a la tabla
-  dataFromServer.forEach(product => {  
-
-    dataTable.row.add([
-      product.id,
-      product.title,
-      product.description,
-      product.code,
-      product.price,
-      product.status,
-      product.stock,
-      product.category,
-      product.thumbnail,
-      '<button class="btn btn-danger eliminar-btn">Eliminar</button>'
-    ]).draw();
-  });
+  // Enviar productos obtenidos a través de WebSockets
+  socket.emit('getproducts', productosDesdeAPI);
 };
 
 // Resto del código...
 
-
-// llamamos la funcion de datos la 1era vez
+// llamamos la función de datos la primera vez
 obtenerProductos();
 
 $(document).ready(function () {
   var dataTable = $('#productTable').DataTable();
 
-  // reaccionamos al clieck de eliminar por fila
+  // reaccionamos al click de eliminar por fila
   $('#productTable').on('click', '.eliminar-btn', function () {    
     let data = dataTable.row($(this).parents('tr')).data();
-    // quitamos del jason pos winsocket
+    // quitamos del JSON por WebSockets
     remove(data[0]);
     // quitamos la fila para no renderizar
     dataTable.row($(this).parents('tr')).remove().draw();
   });
 });
-
 
 function remove(productData) {
   const handleResult = function (status) {

@@ -1,5 +1,6 @@
-const { model, Schema } = require('mongoose');
-const ProductModel = require('../dao/models/products.model.js'); // Assuming products.model.js is in the same directory
+const { model, Schema, ObjectId } = require('mongoose');
+const { Product } = require('../dao/models/products.model.js');
+
 
 const cartSchema = new Schema({
     products: [
@@ -22,8 +23,6 @@ class CartManager {
             return [];
         }
     }
-    
-
 
     async getCartById(cid) {
         try {
@@ -47,19 +46,42 @@ class CartManager {
             return 'Error creando carrito';
         }
     }
-
+    //agrega prpducto al carrito, valida si producto existe y si existe suma cantidad!
     async updateCart(cid, updatedProducts) {
         try {
             const cart = await CartModel.findOne({ _id: cid });
+    
             if (!cart) {
                 return 'No se encuentra el carrito';
             }
-
-            cart.products = updatedProducts.map((updatedProduct) => ({
-                productId: updatedProduct.productId,
-                quantity: updatedProduct.quantity,
-            }));
-
+    
+            // Verificar la existencia de los productos antes de actualizar el carrito
+            for (const updatedProduct of updatedProducts) {
+                const productExists = await Product.findOne({ _id: updatedProduct.productId });
+    
+                if (!productExists) {
+                    return `No se puede actualizar el carrito. Producto con ID ${updatedProduct.productId} no encontrado.`;
+                }
+            }
+    
+            // Actualizar productos en el carrito
+            for (const updatedProduct of updatedProducts) {
+                const existingProductIndex = cart.products.findIndex(
+                    (product) => product.productId.toString() === updatedProduct.productId
+                );
+    
+                if (existingProductIndex !== -1) {
+                    // Si el producto ya existe en el carrito, sumar las cantidades
+                    cart.products[existingProductIndex].quantity += updatedProduct.quantity;
+                } else {
+                    // Si el producto no existe, agregarlo al carrito
+                    cart.products.push({
+                        productId: updatedProduct.productId,
+                        quantity: updatedProduct.quantity,
+                    });
+                }
+            }
+    
             const updatedCart = await cart.save();
             return updatedCart;
         } catch (error) {
@@ -67,6 +89,12 @@ class CartManager {
             return 'Error actualizando carrito';
         }
     }
+    
+    
+ 
+    
+
+    
 
     async removeProductFromCart(cid, pid) {
         try {
@@ -74,16 +102,23 @@ class CartManager {
             if (!cart) {
                 return 'No se encuentra el carrito';
             }
-
+    
+            console.log('Antes del filtro:', cart.products);
+    
             cart.products = cart.products.filter((product) => product.productId.toString() !== pid);
-
+    
+            console.log('Después del filtro:', cart.products);
+    
             const updatedCart = await cart.save();
             return updatedCart;
         } catch (error) {
-            console.error('Error removing product from cart in MongoDB:', error);
+            console.error('Error eliminando producto del carrito MongoDB:', error);
             return 'Error eliminando producto del carrito';
         }
     }
+    
+
+
 
     async updateProductQuantity(cid, pid, quantity) {
         try {
@@ -91,13 +126,13 @@ class CartManager {
             if (!cart) {
                 return 'No se encuentra el carrito';
             }
-
+    
             const productIndex = cart.products.findIndex((product) => product.productId.toString() === pid);
-
+    
             if (productIndex !== -1) {
                 cart.products[productIndex].quantity = quantity;
             }
-
+    
             const updatedCart = await cart.save();
             return updatedCart;
         } catch (error) {
@@ -105,6 +140,9 @@ class CartManager {
             return 'Error actualizando cantidad del producto en el carrito';
         }
     }
+
+
+
 
     async deleteCart(cid) {
         try {
@@ -118,6 +156,26 @@ class CartManager {
             return 'Error eliminando carrito';
         }
     }
+
+    async emptyCart(cid) {
+        try {
+            const cart = await CartModel.findOne({ _id: cid });
+    
+            if (!cart) {
+                return 'No se encuentra el carrito';
+            }
+    
+            // Vaciar el array de productos del carrito
+            cart.products = [];
+    
+            const updatedCart = await cart.save();
+            return updatedCart;
+        } catch (error) {
+            console.error('Error vaciando el carrito en MongoDB:', error);
+            return 'Error vaciando el carrito';
+        }
+    }
+    
 }
 
 module.exports = CartManager;

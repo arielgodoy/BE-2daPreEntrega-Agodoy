@@ -8,7 +8,7 @@ const userRouter = require('./routes/users.router.js')
 const hbsrouter = require('./routes/handlebars.router.js');
 
 const ProductManager = require('./managers/ProductManagerMongo.js');
-
+const productManager = new ProductManager();
 const { connectDb } = require('./config/mongo.js')
 
 //console.log('antes de conectar');
@@ -27,6 +27,7 @@ app.set("views", path.resolve(__dirname + '/views'));
 
 // routers End Points BE
 app.use('/api/products', productRouter);
+
 app.use('/api/carts', cartRouter);
 app.use('/api/users', userRouter)
 // routers FE
@@ -84,12 +85,7 @@ io.on('connection',socket=>{
 // hasta aqui Winsocket
 
 
-// Multer
-// app.post('/single', uploader(), (req, res) => {
-//     res.send('Archivo subido correctamente');
-// });
-// hasta aqui Multer
-// Throw error
+
 app.use((err, req, res, next) => {
     console.error(err.stack);
     res.status(500).send('error de server');
