@@ -58,38 +58,60 @@ class ProductManager {
     }
   }
 
-  async getProducts(limit = null,page = 1, pageSize = 10,  sort = null) {
+  async getProducts({ limit = null, page = 1, pageSize = 10, sort = null, category = null, availability = null }) {
     try {
-      let query = Product.find();
-      console.log('METODO getProducts')
-      console.log('limit='+limit)
-      console.log('Page='+page)
-      console.log('pageSize='+pageSize)
-      console.log('sort='+sort)
-        
-  
-      // Aplica el límite si se proporciona
-      if (limit !== null) {
-        query = query.limit(limit);
-      }  
-      // Aplica el ordenamiento si se proporciona
-      if (sort === 'asc' || sort === 'desc') {
-        const sortDirection = sort === 'asc' ? 1 : -1;
-        query = query.sort({ price: sortDirection });     
-      }  
-      // Calcula el índice de inicio para la paginación
-      const startIndex = Math.max((page - 1) * pageSize, 0);  
-      // Aplica la paginación usando Mongoose
-      console.log('pagesize=' + pageSize);
-      query = query.skip(startIndex).limit(pageSize);
-  
-      const products = await query;
-      return Promise.resolve(products);
+        console.log('METODO getProducts');
+        console.log('limit=' + limit);
+        console.log('Page=' + page);
+        console.log('pageSize=' + pageSize);
+        console.log('sort=' + sort);
+        console.log('category=' + category);
+        console.log('availability=' + availability);
+
+        let query = Product.find();
+
+        // Apply category filter if provided
+        if (category) {
+            query = query.where('category').equals(category);
+        }
+
+        // Apply availability filter if provided
+        if (availability !== null) {
+            query = query.where('availability').equals(availability);
+        }
+
+        // Apply the limit if provided
+        if (limit !== null) {
+            query = query.limit(limit);
+        }
+
+        // Apply sorting if provided
+        if (sort === 'asc' || sort === 'desc') {
+            const sortDirection = sort === 'asc' ? 1 : -1;
+            query = query.sort({ price: sortDirection });
+        }
+
+        // Calculate the start index for pagination
+        const startIndex = Math.max((page - 1) * pageSize, 0);
+
+        // Apply pagination using Mongoose
+        console.log('pagesize=' + pageSize);
+        query = query.skip(startIndex).limit(pageSize);
+
+        // Execute the query and get total count for pagination
+        const [products, totalItems] = await Promise.all([
+            query,
+            Product.countDocuments(),
+        ]);
+
+        // Return an object with products and totalItems
+        return Promise.resolve({ products, totalItems });
     } catch (error) {
-      console.error('Error al obtener productos:', error);
-      return Promise.resolve([]);
+        console.error('Error al obtener productos:', error);
+        return Promise.resolve({ products: [], totalItems: 0 });
     }
-  }
+}
+
   
 
 
