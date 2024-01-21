@@ -2,5 +2,22 @@
 GET http://localhost:8080/api/carts/
 
 
-### get de carrtio por id
+### get del json carritoo por id
 GET http://localhost:8080/api/carts/65abeea22db0826be574dbcb
+Accept: application/json
+X-Requested-With: XMLHttpRequest
+
+### get del json carritoo por id
+GET http://localhost:8080/api/carts/65abeea22db0826be574dbcb
+
+### agrega un producto al carrito
+PUT  http://localhost:8080/api/carts/65abeea22db0826be574dbcb/products/65ac68571b5161f4c4defe76
+Content-Type: application/json;charset=UTF-8
+
+{
+        "quantity":3
+}
+    
+
+
+

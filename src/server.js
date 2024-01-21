@@ -1,68 +1,82 @@
 const express = require('express');
-const path = require("path");
+const path = require('path');
 const { Server } = require('socket.io');
-const { engine } = require("express-handlebars");
+const exphbs = require('express-handlebars');
+const fetch = require('node-fetch');
+
 const productRouter = require('./routes/products.router.js');
 const cartRouter = require('./routes/carts.router.js');
-const userRouter = require('./routes/users.router.js')
+const userRouter = require('./routes/users.router.js');
 const hbsrouter = require('./routes/handlebars.router.js');
 
 const ProductManager = require('./managers/ProductManagerMongo.js');
 const productManager = new ProductManager();
-const { connectDb } = require('./config/mongo.js')
+const { connectDb } = require('./config/mongo.js');
 
-//console.log('antes de conectar');
-connectDb()
-//console.log('despues de conectar');
+// console.log('antes de conectar');
+connectDb();
+// console.log('después de conectar');
 
 const app = express();
 const port = 8080;
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, '/public')));
-// handlebars
-app.engine("handlebars", engine());  // Usa la propiedad engine de la instancia
-app.set("view engine", "handlebars");
-app.set("views", path.resolve(__dirname + '/views'));
 
-// routers End Points BE
+// Configuración de Handlebars
+const handlebars = exphbs.create({
+  helpers: {
+    jsonStringify: function(context) {
+      return JSON.stringify(context);
+    }
+  }
+});
+
+app.engine('handlebars', handlebars.engine);
+app.set('view engine', 'handlebars');
+app.set('views', path.resolve(__dirname, 'views'));
+
+// Routers End Points BE
 app.use('/api/products', productRouter);
 app.use('/api/carts', cartRouter);
-app.use('/api/users', userRouter)
-// routers FE
+app.use('/api/users', userRouter);
+
+// Routers FE
 app.use('/', hbsrouter);
-
-
 
 const httpServer = app.listen(port, (err) => {
   if (err) throw err;
-  console.log(`server running on ${port}`);
+  console.log(`Server running on ${port}`);
 });
 
 // Winsocket
 const io = new Server(httpServer);
 io.on('connection', socket => {
-  console.log('Nueva conexion entrante.. por WS');
+  console.log('Nueva conexión entrante por WS');
+
   socket.on('addproduct', formData => {
-    const status = productManager.addProduct(formData.title,
+    const status = productManager.addProduct(
+      formData.title,
       formData.description,
       formData.price,
       formData.thumbnail,
       formData.code,
       formData.stock,
       formData.status,
-      formData.category);
-    socket.emit('resultado.addproduct', status)
+      formData.category
+    );
+    socket.emit('resultado.addproduct', status);
     socket.broadcast.emit('productosactualizados', status);
-  })
+  });
+
   socket.on('getproducts', async () => {
-    console.log("entro a getproducts de WS");
-    try {      
+    console.log('entro a getproducts de WS');
+    try {
       const response = await fetch('http://localhost:8080/api/products/');
       if (!response.ok) {
         console.error('Error al obtener productos desde la API:', response.statusText);
         return;
-      }      
+      }
       try {
         const products = await response.json() || [];
         socket.emit('resultado.getproducts', products);
@@ -76,19 +90,14 @@ io.on('connection', socket => {
   });
 
   socket.on('eliminaProducto', id => {
-    console.log("Eliminando Producto ID = " + id);
+    console.log('Eliminando Producto ID = ' + id);
     let resultado = productManager.deleteProduct(id);
     socket.broadcast.emit('productosactualizados', resultado);
   });
+});
 
-
-
-})
-// hasta aqui Winsocket
-
-
-
+// Middleware de manejo de errores
 app.use((err, req, res, next) => {
   console.error(err.stack);
-  res.status(500).send('error de server');
+  res.status(500).send('Error de server');
 });
