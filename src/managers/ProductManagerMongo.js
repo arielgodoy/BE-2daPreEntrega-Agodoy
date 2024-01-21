@@ -34,7 +34,7 @@ class ProductManager {
     try {
       const result = await Product.deleteOne({ _id: id });
       if (result.deletedCount > 0) {
-        return { success: true, message: `Producto con ID ${id} eliminado con éxito.` };
+        return { success: true, message: `Producto con code ${id} eliminado con éxito.` };
       } else {
         return { success: false, message: `No se encontró un producto con ID ${id}.` };
       }
@@ -60,13 +60,13 @@ class ProductManager {
 
   async getProducts({ limit = null, page = 1, pageSize = 10, sort = null, category = null, availability = null }) {
     try {
-        console.log('METODO getProducts');
-        console.log('limit=' + limit);
-        console.log('Page=' + page);
-        console.log('pageSize=' + pageSize);
-        console.log('sort=' + sort);
-        console.log('category=' + category);
-        console.log('availability=' + availability);
+        // console.log('METODO getProducts');
+        // console.log('limit=' + limit);
+        // console.log('Page=' + page);
+        // console.log('pageSize=' + pageSize);
+        // console.log('sort=' + sort);
+        // console.log('category=' + category);
+        // console.log('availability=' + availability);
 
         let query = Product.find();
 
@@ -87,10 +87,11 @@ class ProductManager {
         }
 
         // Apply the limit if provided
-        if (limit !== null) {
-            query = query.limit(limit);
-            console.log("aplicando límite", limit);
+        if (limit !== null && limit !== undefined) {
+          query = query.limit(limit);
+          console.log("aplicando límite", limit);
         }
+
 
         // Execute the query (without skip and limit for counting total)
         const products = await query.exec();
@@ -102,6 +103,7 @@ class ProductManager {
         const paginatedProducts = products.slice(startIndex, startIndex + pageSize);
 
         // Return an object with products and totalItems
+        //console.log("productos encontrados", products.length)
         return Promise.resolve({ products: paginatedProducts, totalItems: products.length });
     } catch (error) {
         console.error('Error al obtener productos:', error);

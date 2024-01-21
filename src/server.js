@@ -27,59 +27,61 @@ app.set("views", path.resolve(__dirname + '/views'));
 
 // routers End Points BE
 app.use('/api/products', productRouter);
-
 app.use('/api/carts', cartRouter);
 app.use('/api/users', userRouter)
 // routers FE
-app.use('/',hbsrouter);
+app.use('/', hbsrouter);
 
 
 
 const httpServer = app.listen(port, (err) => {
-    if (err) throw err;
-    console.log(`server running on ${port}`);
+  if (err) throw err;
+  console.log(`server running on ${port}`);
 });
 
 // Winsocket
 const io = new Server(httpServer);
-io.on('connection',socket=>{    
-    console.log('Nueva conexion entrante.. por WS');      
-    socket.on('addproduct',formData => {                    
-        const status=productManager.addProduct(formData.title,
-            formData.description,
-            formData.price,
-            formData.thumbnail,
-            formData.code,
-            formData.stock,
-            formData.status,
-            formData.category);        
-        socket.emit('resultado.addproduct',status)
-        socket.broadcast.emit('productosactualizados',status       
-        
-        );
-        })
-        socket.on('getproducts', async (limit) => {
-            console.log("Data solicitada por getProducts " + limit);
-          
-            try {
-              // Espera a que la operación asíncrona se complete
-              let products = await productManager.getProducts(parseInt(limit));        
-              
-              socket.emit('resultado.getproducts', products);
-            } catch (error) {
-              console.error('Error al obtener productos:', error);
-              socket.emit('resultado.getproducts', { error: 'Error al obtener productos' });
-            }
-          });
-          
-    socket.on('eliminaProducto',id =>{
-            console.log("Eliminando Producto ID = "+ id);
-            let resultado=productManager.deleteProduct(id);
-            //socket.emit('resultado.eliminaproducto',resultado);
-            socket.broadcast.emit('productosactualizados',resultado);
-            });
+io.on('connection', socket => {
+  console.log('Nueva conexion entrante.. por WS');
+  socket.on('addproduct', formData => {
+    const status = productManager.addProduct(formData.title,
+      formData.description,
+      formData.price,
+      formData.thumbnail,
+      formData.code,
+      formData.stock,
+      formData.status,
+      formData.category);
+    socket.emit('resultado.addproduct', status)
+    socket.broadcast.emit('productosactualizados', status);
+  })
+  socket.on('getproducts', async () => {
+    console.log("entro a getproducts de WS");
+    try {      
+      const response = await fetch('http://localhost:8080/api/products/');
+      if (!response.ok) {
+        console.error('Error al obtener productos desde la API:', response.statusText);
+        return;
+      }      
+      try {
+        const products = await response.json() || [];
+        socket.emit('resultado.getproducts', products);
+      } catch (error) {
+        console.error('Error al convertir la respuesta a JSON:', error);
+      }
+    } catch (error) {
+      console.error('Error al obtener productos:', error);
+      socket.emit('resultado.getproducts', { error: 'Error al obtener productos' });
+    }
+  });
 
-    
+  socket.on('eliminaProducto', id => {
+    console.log("Eliminando Producto ID = " + id);
+    let resultado = productManager.deleteProduct(id);
+    socket.broadcast.emit('productosactualizados', resultado);
+  });
+
+
 
 })
 // hasta aqui Winsocket
@@ -87,6 +89,6 @@ io.on('connection',socket=>{
 
 
 app.use((err, req, res, next) => {
-    console.error(err.stack);
-    res.status(500).send('error de server');
+  console.error(err.stack);
+  res.status(500).send('error de server');
 });

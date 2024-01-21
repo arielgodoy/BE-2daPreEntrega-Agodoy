@@ -1,39 +1,58 @@
-// products.js
-
+console.log('Bienvenidos al ingreso por Websocket');
 const socket = io();
 const limit = '';
 const dataTable = $('#productTable').DataTable();
 
 console.log("Título de la página:", programa);
-
-// Obtener productos desde la API REST
-const obtenerProductosDesdeAPI = async () => {
-  const response = await fetch('http://localhost:8080/api/products/');
-  const data = await response.json();
-  console.log(data.payload);
-  return data.payload;
-};
-
-// Función para obtener productos usando WebSockets
+//funcion que actualiza la data en pantalla
 const obtenerProductos = async () => {
-  const productosDesdeAPI = await obtenerProductosDesdeAPI();
+  try {
+    // "Pedimos la data al server por WS"
+    console.log("Pedimos la data al server por WS")
+    socket.emit('getproducts', limit);
 
-  // Enviar productos obtenidos a través de WebSockets
-  socket.emit('getproducts', productosDesdeAPI);
+    // Esperamos la data de manera asíncrona
+    const dataFromServer = await new Promise(resolve => {
+      socket.on('resultado.getproducts', data => resolve(data));      
+    });
+    
+    console.log("data=", dataFromServer);
+    const products = dataFromServer;   
+
+    // Limpiamos la tabla
+    dataTable.clear().draw();
+
+    // Inyectamos la data a la tabla
+    products.forEach(product => {
+      dataTable.row.add([
+        product._id || '',
+        product.title || '',
+        product.description || '',
+        product.code || '',
+        product.price || '',
+        product.status || '',
+        product.stock || '',
+        product.category || '',
+        product.thumbnail || '',
+        '<button class="btn btn-danger eliminar-btn">Eliminar</button>'
+      ]).draw();
+    });
+  } catch (error) {
+    console.error('Error en obtenerProductos:', error);
+  }
 };
 
 // Resto del código...
-
-// llamamos la función de datos la primera vez
 obtenerProductos();
+
 
 $(document).ready(function () {
   var dataTable = $('#productTable').DataTable();
 
-  // reaccionamos al click de eliminar por fila
+  // reaccionamos al clieck de eliminar por fila
   $('#productTable').on('click', '.eliminar-btn', function () {    
     let data = dataTable.row($(this).parents('tr')).data();
-    // quitamos del JSON por WebSockets
+    // quitamos del jason pos winsocket
     remove(data[0]);
     // quitamos la fila para no renderizar
     dataTable.row($(this).parents('tr')).remove().draw();
@@ -47,4 +66,3 @@ function remove(productData) {
   };
   socket.emit('eliminaProducto', productData, handleResult);
 }
-

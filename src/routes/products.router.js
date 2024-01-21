@@ -10,22 +10,11 @@ router
     try {
         //const limit = parseInt(req.query.limit) || null;
         const limit = !isNaN(parseInt(req.query.limit)) ? parseInt(req.query.limit) : null;
-
-
         const page = parseInt(req.query.page) || 1;
-        const pageSize = parseInt(req.query.pageSize) || 10;
+        const pageSize = parseInt(req.query.pageSize) || 100;
         const sort = req.query.sort || null;
         const category = req.query.category || null;
-        const availability = req.query.availability || null;
-
-        console.log('Router Products');
-        console.log('limit=' + limit);
-        console.log('Page=' + page);
-        console.log('pageSize=' + pageSize);
-        console.log('sort=' + sort);
-        console.log('category=' + category);
-        console.log('availability=' + availability);
-
+        const availability = req.query.availability || null;        
         const result = await productManager.getProducts({
             limit,
             page,
@@ -52,7 +41,7 @@ router
             nextLink: hasNextPage ? `${req.originalUrl}?page=${page + 1}&pageSize=${pageSize}` : null,
         };
 
-        res.json(response);
+        res.json(result.products);
     } catch (error) {
         console.error(error);
         res.status(500).json({ status: 'error', message: 'Error interno del servidor' });
