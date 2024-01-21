@@ -22,8 +22,8 @@ class ProductManager {
         category,
       });
 
-      await product.save();
-      return { success: true, message: 'Producto agregado con éxito.' };
+      await product.save();      
+      return { success: true, message: 'Producto agregado con éxito.', productId: product._id.toString() };
     } catch (error) {
       console.error('Error al agregar producto:', error);
       return { success: false, message: 'Error al agregar el producto.' };
@@ -80,50 +80,53 @@ class ProductManager {
             query = query.where('availability').equals(availability);
         }
 
-        // Apply the limit if provided
-        if (limit !== null) {
-            query = query.limit(limit);
-        }
-
         // Apply sorting if provided
         if (sort === 'asc' || sort === 'desc') {
             const sortDirection = sort === 'asc' ? 1 : -1;
             query = query.sort({ price: sortDirection });
         }
 
+        // Apply the limit if provided
+        if (limit !== null) {
+            query = query.limit(limit);
+            console.log("aplicando límite", limit);
+        }
+
+        // Execute the query (without skip and limit for counting total)
+        const products = await query.exec();
+
         // Calculate the start index for pagination
         const startIndex = Math.max((page - 1) * pageSize, 0);
 
-        // Apply pagination using Mongoose
-        console.log('pagesize=' + pageSize);
-        query = query.skip(startIndex).limit(pageSize);
-
-        // Execute the query and get total count for pagination
-        const [products, totalItems] = await Promise.all([
-            query,
-            Product.countDocuments(),
-        ]);
+        // Slice the array to get the desired page
+        const paginatedProducts = products.slice(startIndex, startIndex + pageSize);
 
         // Return an object with products and totalItems
-        return Promise.resolve({ products, totalItems });
+        return Promise.resolve({ products: paginatedProducts, totalItems: products.length });
     } catch (error) {
         console.error('Error al obtener productos:', error);
         return Promise.resolve({ products: [], totalItems: 0 });
     }
 }
 
+
+
   
 
 
-  async getProductByCode(code) {
-    try {
-      const product = await Product.findOne({ code });
-      return product !== null;
-    } catch (error) {
+async getProductById(id) {
+  console.log('ID recibido:', id);
+  try {
+      const product = await Product.findOne({ "_id": id });
+      console.log('Producto encontrado:', product);
+      return { product, error: null };
+  } catch (error) {
       console.error('Error al verificar producto por código:', error);
-      return false;
-    }
+      return { product: null, error };
   }
+}
+
+
 }
 
 module.exports = ProductManager;
