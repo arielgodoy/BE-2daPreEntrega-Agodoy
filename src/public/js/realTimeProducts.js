@@ -19,7 +19,7 @@ const obtenerProductos = async () => {
     // Inyectamos la data a la tabla
     products.forEach(product => {      
       dataTable.row.add([
-        product.id || '',
+        product._id || '',
         product.title || '',
         product.description || '',
         product.code || '',

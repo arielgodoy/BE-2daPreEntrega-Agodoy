@@ -25,7 +25,17 @@ router
         title: "Real time Refresh WINSOCK",
         programa: "realTimeProducts"
     });
-});
+})
+
+
+// .get("/vistacarrito", (req, res) => {
+//     console.log('Renderizando .. /vistacarrito..');    
+//     res.render("vistacarrito", {
+//         title: "Vista carrito",
+//         programa: "vistacarrito"
+//     });
+// })
+;
 
 //export { router as default }; 
 module.exports = router;

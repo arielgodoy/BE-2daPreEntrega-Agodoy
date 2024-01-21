@@ -15,16 +15,37 @@ router
         });
     })
 
+
     // traer un carrito por id
     .get('/:cid', async (req, res) => {
-        const { cid } = req.params;
-        const cart = await cartManager.getCartById(cid);
+        const { cid } = req.params;         
 
-        res.send({
-            status: 'success',
-            payload: cart,
-        });
+        try {
+            const cart = await cartManager.getCartById(cid);    
+            // Verificar si es una solicitud AJAX (JSON) o HTML
+            if (req.xhr || (req.headers.accept && req.headers.accept.indexOf('json') > -1)) {
+                // Si es una solicitud AJAX o acepta JSON, responder con datos JSON                
+                res.send({
+                    status: 'success',
+                    payload: cart,
+                });
+            } else {
+                // Si no, renderizar la vista de Handlebars
+                res.render('vistacarrito', {
+                    title: 'Vista Carrito',
+                    programa: 'vistacarrito',
+                    cartData: cart // Corregir variable aquí
+                });
+            }
+        } catch (error) {
+            console.error('Error al obtener datos del carrito:', error);    
+            // Manejar el error según sea necesario, por ejemplo, devolviendo un JSON en lugar de un HTML en caso de error
+            res.status(500).json({ error: 'Error al obtener datos del carrito' });
+        }
     })
+
+
+
 
 
     // crear un carrito
