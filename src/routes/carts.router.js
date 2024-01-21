@@ -18,8 +18,7 @@ router
 
     // traer un carrito por id
     .get('/:cid', async (req, res) => {
-        const { cid } = req.params;         
-
+        const { cid } = req.params;
         try {
             const cart = await cartManager.getCartById(cid);    
             // Verificar si es una solicitud AJAX (JSON) o HTML
@@ -29,12 +28,11 @@ router
                     status: 'success',
                     payload: cart,
                 });
-            } else {
-                // Si no, renderizar la vista de Handlebars
+            } else {                
                 res.render('vistacarrito', {
                     title: 'Vista Carrito',
                     programa: 'vistacarrito',
-                    cartData: cart // Corregir variable aquí
+                    cartData: cart 
                 });
             }
         } catch (error) {
