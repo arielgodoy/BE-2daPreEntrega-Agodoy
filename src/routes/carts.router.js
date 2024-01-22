@@ -58,13 +58,13 @@ router
     })
 
     
-    // agregar un producto(s) a un carrito
+    // agregar un producto(s) a un carrito    
     .put('/:cid', async (req, res) => {
+        //console.log("PUT agregar un producto(s) a un carrito")
         const { cid } = req.params;
         const updatedProducts = req.body.products;
         console.log(updatedProducts)
         const result = await cartManager.updateCart(cid, updatedProducts);
-
         res.send({
             status: 'success',
             payload: result,

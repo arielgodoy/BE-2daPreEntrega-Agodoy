@@ -1,7 +1,7 @@
 const express = require('express');
 const path = require('path');
 const { Server } = require('socket.io');
-const exphbs = require('express-handlebars');
+
 const fetch = require('node-fetch');
 
 const productRouter = require('./routes/products.router.js');
@@ -24,12 +24,19 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, '/public')));
 
 // Configuración de Handlebars
+const exphbs = require('express-handlebars');
 const handlebars = exphbs.create({
   helpers: {
     jsonStringify: function(context) {
       return JSON.stringify(context);
-    }
-  }
+    }    
+  },
+    // Desactivar la comprobación de acceso al prototipo (NO recomendado para producción)
+  // Esto permitirá el acceso a propiedades del prototipo
+  runtimeOptions: {
+    allowProtoPropertiesByDefault: true,
+    allowProtoMethodsByDefault: true,
+  },
 });
 
 app.engine('handlebars', handlebars.engine);

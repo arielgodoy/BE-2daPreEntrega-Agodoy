@@ -48,6 +48,7 @@ class CartManager {
     }
     //agrega prpducto al carrito, valida si producto existe y si existe suma cantidad!
     async updateCart(cid, updatedProducts) {
+        console.log("Agrega producto al carrito, valida si el producto existe y si existe, suma cantidad.");
         try {
             const cart = await CartModel.findOne({ _id: cid });
     
@@ -55,8 +56,14 @@ class CartManager {
                 return 'No se encuentra el carrito';
             }
     
+            // Verificar si updatedProducts es un array
+            if (!Array.isArray(updatedProducts)) {
+                return 'La lista de productos actualizados no es válida.';
+            }
+    
             // Verificar la existencia de los productos antes de actualizar el carrito
             for (const updatedProduct of updatedProducts) {
+                //console.log("verifgica exista producto a insertar",updatedProduct.productId)
                 const productExists = await Product.findOne({ _id: updatedProduct.productId });
     
                 if (!productExists) {
@@ -71,10 +78,11 @@ class CartManager {
                 );
     
                 if (existingProductIndex !== -1) {
-                    // Si el producto ya existe en el carrito, sumar las cantidades
+                    // Si el producto ya existe en el carrito, suma las cantidades
                     cart.products[existingProductIndex].quantity += updatedProduct.quantity;
                 } else {
-                    // Si el producto no existe, agregarlo al carrito
+                    // Si el producto no existe, agrégalo al carrito
+                    console.log("Añadiendo producto al carrito", updatedProduct.productId);
                     cart.products.push({
                         productId: updatedProduct.productId,
                         quantity: updatedProduct.quantity,
@@ -91,6 +99,7 @@ class CartManager {
     }
     
     
+    
  
     
 
@@ -102,13 +111,7 @@ class CartManager {
             if (!cart) {
                 return 'No se encuentra el carrito';
             }
-    
-            console.log('Antes del filtro:', cart.products);
-    
-            cart.products = cart.products.filter((product) => product.productId.toString() !== pid);
-    
-            console.log('Después del filtro:', cart.products);
-    
+            cart.products = cart.products.filter((product) => product.productId.toString() !== pid);    
             const updatedCart = await cart.save();
             return updatedCart;
         } catch (error) {
