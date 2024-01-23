@@ -1,18 +1,26 @@
 const express = require('express');
 const CartManager = require('../managers/CartManagerMongo.js');
-const router = express.Router();
 const cartManager = new CartManager(); // Instantiate CartManager
+const router = express.Router();
 
 router
 
     // traer todos los carritos
     .get('/', async (req, res) => {
-        const carts = await cartManager.getCarts();
-
-        res.send({
-            status: 'success',
-            payload: carts,
-        });
+        const carts = await cartManager.getCarts();        
+        if (req.xhr || (req.headers.accept && req.headers.accept.indexOf('json') > -1)) {
+            // Si es una solicitud AJAX o acepta JSON, responder con datos JSON                
+            res.send({
+                status: 'success',
+                payload: carts,
+            });
+        } else {                
+            res.render('listacarritos', {
+                title: 'Listacarritos',
+                programa: 'Listacarritos',
+                cartData: carts 
+            });
+        }        
     })
 
 
